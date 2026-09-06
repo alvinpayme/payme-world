@@ -21,7 +21,11 @@ if (!fs.existsSync(DB_FILE)) {
 }
 
 function readDB() {
-    return JSON.parse(fs.readFileSync(DB_FILE));
+    try {
+        return JSON.parse(fs.readFileSync(DB_FILE));
+    } catch (err) {
+        return { users: [] };
+    }
 }
 
 function writeDB(data) {
@@ -33,8 +37,7 @@ app.get("/", (req, res) => {
     res.send("PayMe backend werkt");
 });
 
-
-// ⭐ REGISTER ROUTE
+// REGISTER
 app.post("/auth/register", async (req, res) => {
     const { phone, password } = req.body;
 
@@ -56,8 +59,7 @@ app.post("/auth/register", async (req, res) => {
     res.status(201).json({ message: "Account succesvol aangemaakt" });
 });
 
-
-// ⭐ LOGIN ROUTE
+// LOGIN
 app.post("/auth/login", async (req, res) => {
     const { phone, password } = req.body;
 
@@ -73,8 +75,7 @@ app.post("/auth/login", async (req, res) => {
     res.json({ token });
 });
 
-
-// ⭐ AUTH ME ROUTE (Dashboard)
+// AUTH ME
 app.get("/auth/me", (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -102,7 +103,6 @@ app.get("/auth/me", (req, res) => {
         res.status(401).json({ error: "Invalid or expired token" });
     }
 });
-
 
 // SERVER STARTEN
 app.listen(PORT, () => {
