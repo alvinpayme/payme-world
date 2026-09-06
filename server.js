@@ -1,149 +1,113 @@
 const express = require('express');
-const app = express();
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const cors = require('cors');
 
-const db = require('./payme_db.js'); // ✔ correcte bestandsnaam
+const app = express();
+const PORT = process.env.PORT || 3005;
+const SECRET_KEY = 'payme_super_secret_key_123';
+const DB_FILE = path.join(__dirname, 'payme_db.json');
 
-app.use(express.json());
+// HIER STAAT DE WAARDEVOLLE UPDATE: Poort openzetten voor je website!
 app.use(cors());
+app.use(express.json());
 
-// ✔ Zorgt dat HTML-bestanden direct geladen worden
-app.use(express.static(path.join(__dirname)));
+// Zorg dat de database bestaat
+if (!fs.existsSync(DB_FILE)) {
+    fs.writeFileSync(DB_FILE, JSON.stringify({ users: [], transactions: [] }, null, 2));
+}
 
-const JWT_SECRET = process.env.JWT_SECRET || 'JE_GEHEIME_SLEUTEL_VOOR_PAYME';
+function readDB() {
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+}
 
-// ─── TOKEN CHECK ───
+function writeDB(data) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
+
+// REGISTREREN
+app.post('/register', async (req, res) => {
+    const { phone, password } = req.body;
+    if (!phone || !password) return res.status(400).json({ error: 'Telefoonnummer en wachtwoord verplicht.' });
+
+    const db = readDB();
+    if (db.users.find(u => u.phone === phone)) return res.status(400).json({ error: 'Dit nummer bestaat al.' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    db.users.push({ phone, password: hashedPassword, balance: 100.00 }); // Iedereen krijgt 100 SRD starttegoed om te testen!
+    writeDB(db);
+
+    res.status(201).json({ message: 'Account succesvol aangemaakt!' });
+});
+
+// INLOGGEN
+app.post('/login', async (req, res) => {
+    const { phone, password } = req.body;
+    const db = readDB();
+    const user = db.users.find(u => u.phone === phone);
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(401).json({ error: 'Onjuist telefoonnummer of wachtwoord.' });
+    }
+
+    const token = jwt.sign({ phone }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ token });
+});
+
+// MIDDELWARE VOOR BEVEILIGING
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
 
-    if (!token) {
-        return res.status(401).json({ error: "Geen toegang." });
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, decodedUser) => {
-        if (err) {
-            return res.status(403).json({ error: "Token ongeldig." });
-        }
-        req.user = decodedUser;
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
         next();
     });
 }
 
-// ─── HTML ROUTES ───
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// SALDO OPHALEN
+app.get('/balance', authenticateToken, (req, res) => {
+    const db = readDB();
+    const user = db.users.find(u => u.phone === req.user.phone);
+    res.json({ balance: user.balance });
 });
 
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
-
-// ─── LOGIN ───
-app.post('/login', async (req, res) => {
-    const { phone_number, password } = req.body;
-
-    if (!phone_number || !password) {
-        return res.status(400).json({ error: "Velden verplicht." });
-    }
-
-    db.getUserByPhone(phone_number, async (err, user) => {
-        if (err || !user) {
-            return res.status(400).json({ error: "Gebruiker niet gevonden." });
-        }
-
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.status(400).json({ error: "Onjuist wachtwoord." });
-        }
-
-        const token = jwt.sign(
-            { id: user.id, phone_number: user.phone_number },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        res.json({
-            message: "Succesvol ingelogd!",
-            token,
-            balance: user.balance
-        });
-    });
-});
-
-// ─── REGISTREREN ───
-app.post('/register', async (req, res) => {
-    const { email, password, phone_number } = req.body;
-
-    if (!email || !password || !phone_number) {
-        return res.status(400).json({ error: "Velden verplicht." });
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        db.saveUser(
-            { email, password: hashedPassword, phone_number, balance: 500.00 },
-            (err, result) => {
-                if (err) {
-                  if (err) {
-    console.error("Echte database fout:", err);
-    return res.status(500).json({ error: "Database fout." });
-}
-                    return res.status(500).json({ error: "Database fout." });
-                }
-                res.status(201).json({ message: "Geregistreerd!" });
-            }
-        );
-
-    } catch (error) {
-        res.status(500).json({ error: "Serverfout." });
-    }
-});
-
-// ─── GELD OVERMAKEN ───
+// GELD OVERMAKEN (P2P EN FINTECH ENGINE)
 app.post('/transfer', authenticateToken, (req, res) => {
-    const { recipient_phone, amount } = req.body;
-    const sender_id = req.user.id;
+    const { recipient_phone, amount, currency } = req.body;
+    const transferAmount = parseFloat(amount);
 
-    if (!recipient_phone || !amount || amount <= 0) {
-        return res.status(400).json({ error: "Ongeldige invoer." });
-    }
+    if (!recipient_phone || transferAmount <= 0) return res.status(400).json({ error: 'Ongeldige gegevens.' });
 
-    db.getUserById(sender_id, (err, sender) => {
-        if (err || !sender) {
-            return res.status(500).json({ error: "Verzender niet gevonden." });
-        }
+    const db = readDB();
+    const sender = db.users.find(u => u.phone === req.user.phone);
+    const recipient = db.users.find(u => u.phone === recipient_phone);
 
-        const fee = amount * 0.01;
-        const totalDeduction = amount + fee;
+    if (!recipient) return res.status(404).json({ error: 'Ontvanger niet gevonden in Payme World.' });
+    if (sender.phone === recipient.phone) return res.status(400).json({ error: 'Je kunt niet naar jezelf overmaken.' });
+    if (sender.balance < transferAmount) return res.status(400).json({ error: 'Saldo ontoereikend.' });
 
-        if (sender.balance < totalDeduction) {
-            return res.status(400).json({ error: "Onvoldoende saldo incl. 1% kosten." });
-        }
+    // Transactie uitvoeren
+    sender.balance -= transferAmount;
+    recipient.balance += transferAmount;
 
-        db.executeTransfer(sender_id, recipient_phone, amount, fee, (err, result) => {
-            if (err) {
-                return res.status(500).json({ error: "Transactie mislukt." });
-            }
-
-            res.json({
-                message: "Transactie succesvol!",
-                sentAmount: amount,
-                feeCharged: fee,
-                newBalance: sender.balance - totalDeduction
-            });
-        });
+    db.transactions.push({
+        from: sender.phone,
+        to: recipient.phone,
+        amount: transferAmount,
+        currency,
+        date: new Date()
     });
+
+    writeDB(db);
+    res.json({ message: 'Geld succesvol overgemaakt!' });
 });
 
-// ─── SERVER START ───
-// —— SERVER START ——
-const PORT = 3005;
-
+// Start de motor!
 app.listen(PORT, () => {
-    console.log(`Server draait succesvol op http://localhost:${PORT}`);
+    console.log(`Server draait succesvol op poort ${PORT}`);
 });
