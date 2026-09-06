@@ -1,0 +1,24 @@
+{
+  "name": "ai-business-engine",
+  "version": "1.0.0",
+  "description": "AI business engine project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.20.0",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "lowdb": "^1.0.0",
+    "openai": "^7.10.0",
+    "sqlite": "^5.1.1"
+  }
+}

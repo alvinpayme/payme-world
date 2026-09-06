@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payme World - Account Aanmaken</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); margin: 0; padding: 10px; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
+        .app-container { background: #ffffff; padding: 25px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); width: 100%; max-width: 420px; text-align: center; }
+        h1 { color: #1e3c72; margin-bottom: 8px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; background-color: white !important; color: #333 !important; }
+        .btn { width: 100%; padding: 14px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 5px; background-color: #1e3c72; box-shadow: 0 4px 12 rgba(30,60,114,0.3); }
+        .footer-link { margin-top: 20px; font-size: 13px; color: #666; }
+        .footer-link a { color: #1e3c72; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Account Aanmaken</h1>
+    <p class="subtitle">Word lid van Payme World 🌍</p>
+    
+    <div class="input-group">
+        <label>Telefoonnummer</label>
+        <input type="text" id="reg-phone" placeholder="Bijv. 0626193693">
+    </div>
+    
+    <div class="input-group">
+        <label>E-mailadres (Optioneel)</label>
+        <input type="email" id="reg-email" placeholder="naam@voorbeeld.com">
+    </div>
+    
+    <div class="input-group">
+        <label>Wachtwoord</label>
+        <input type="password" id="reg-pass" placeholder="Kies een sterk wachtwoord">
+    </div>
+    
+    <button class="btn" onclick="registerAccount()">Registreren</button>
+    
+    <div class="footer-link">
+        <p>Al een account? <a href="http://localhost:3005">Inloggen</a></p>
+    </div>
+</div>
+
+<script>
+    async function registerAccount() {
+        const phone_number = document.getElementById('reg-phone').value;
+        const email = document.getElementById('reg-email').value || 'geen@email.com';
+        const password = document.getElementById('reg-pass').value;
+        
+        if (!phone_number || !password) {
+            alert('Vul alstublieft een telefoonnummer en wachtwoord in.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('http://localhost:3005/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, phone_number, password })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('✅ ' + data.message + '\n\nJe kunt nu inloggen met je gegevens.');
+                window.location.href = 'http://localhost:3005';
+            } else {
+                alert('❌ Fout: ' + data.error);
+            }
+        } catch (err) {
+            alert('Kan geen verbinding maken met de server voor registratie.');
+        }
+    }
+</script>
+
+</body>
+</html>

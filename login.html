@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payme World - Inloggen</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a73e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        h2 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        p {
+            color: #666;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #0d3b66;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            display: block; /* Zorgt dat de knop altijd zichtbaar blijft */
+        }
+        button:hover {
+            background-color: #051c33;
+        }
+        .links {
+            margin-top: 25px;
+            font-size: 14px;
+        }
+        .links a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Inloggen</h2>
+    <p>Welkom terug bij Payme World 🌐</p>
+    
+    <form id="loginForm">
+        <div class="input-group">
+            <label for="phone">Telefoonnummer</label>
+            <input type="text" id="phone" required placeholder="Bijv. 0612345678">
+        </div>
+        
+        <div class="input-group">
+            <label for="password">Wachtwoord</label>
+            <input type="password" id="password" required placeholder="••••">
+        </div>
+        
+        <button type="submit">Inloggen</button>
+    </form>
+    
+    <div class="links">
+        Nog geen account? <a href="register.html">Account Aanmaken</a>
+    </div>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const phone_number = document.getElementById('phone').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            const response = await fetch('http://localhost:3005/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ phone_number, password })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('Succesvol ingelogd!');
+                localStorage.setItem('token', data.token);
+                window.location.href = 'dashboard.html'; 
+            } else {
+                alert('Fout: ' + (data.error || 'Inloggen mislukt'));
+            }
+        } catch (error) {
+            console.error('Inlogfout:', error);
+            alert('Kan geen verbinding maken met de server.');
+        }
+    });
+</script>
+
+</body>
+</html>

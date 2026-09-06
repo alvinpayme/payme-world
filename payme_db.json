@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1788624784370,
+    "email": "geen@email.com",
+    "password": "$2b$10$EUkmHkIk1T/SEK4KcsgAPeY6qj/Frv7KiAk2STVkTIuzxuiQzHj56",
+    "phone_number": "0626193693",
+    "balance": 399.9
+  },
+  {
+    "id": 1788642521748,
+    "email": "Aawilliams@live.nl",
+    "password": "$2b$10$vLvLT4u5ogcqoJ778rV30ONLq1HqAc1/8MTKOpuQPDJLrdf8r3GjC",
+    "phone_number": "0623123457",
+    "balance": "50010"
+  }
+]
