@@ -1,80 +1,29 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payme World - Dashboard</title>
-</head>
-
-<body style="font-family: sans-serif; background-color: #f4f6f9; padding: 20px;">
-
-    <div style="max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-        <h2 style="color: #0d3b66; margin-top: 0;">Payme World 🌐</h2>
-        <h3 style="margin-top: 5px;">Dashboard</h3>
-
-        <p id="welcomeText" style="font-size: 18px; font-weight: bold; margin-top: 20px;"></p>
-
-        <p style="margin-top: 20px; font-size: 16px;">
-            <strong>Telefoonnummer:</strong> <span id="userPhone"></span>
-        </p>
-
-        <p style="margin-top: 10px; font-size: 16px;">
-            <strong>Saldo:</strong> €<span id="userBalance"></span>
-        </p>
-
-        <button id="logoutBtn" 
-            style="margin-top: 25px; width: 100%; padding: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer;">
-            Uitloggen
-        </button>
-    </div>
-
 <script>
-    // 1️⃣ Token ophalen
-    const token = localStorage.getItem('token');
+const token = localStorage.getItem('token');
 
-    if (!token) {
-        alert("Je bent niet ingelogd.");
-        window.location.href = "login.html";
-    }
+if (!token) {
+    window.location.href = "login.html";
+}
 
-    // 2️⃣ User data ophalen
-    async function loadDashboard() {
-        try {
-            const response = await fetch("https://payme-world.onrender.com/auth/me", {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert("Token ongeldig. Log opnieuw in.");
-                localStorage.removeItem("token");
-                window.location.href = "login.html";
-                return;
-            }
-
-            // 3️⃣ Data tonen
-            document.getElementById("welcomeText").innerText = `Welkom terug!`;
-            document.getElementById("userPhone").innerText = data.phone;
-            document.getElementById("userBalance").innerText = data.balance;
-
-        } catch (error) {
-            console.error(error);
-            alert("Kon geen verbinding maken met de live server.");
+async function loadDashboard() {
+    const response = await fetch("https://payme-world.onrender.com/auth/me", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`
         }
-    }
+    });
 
-    loadDashboard();
+    const data = await response.json();
 
-    // 4️⃣ Uitloggen
-    document.getElementById("logoutBtn").addEventListener("click", () => {
+    if (!response.ok) {
         localStorage.removeItem("token");
         window.location.href = "login.html";
-    });
-</script>
+        return;
+    }
 
-</body>
-</html>
+    document.getElementById("userPhone").innerText = data.phone;
+    document.getElementById("userBalance").innerText = data.balance;
+}
+
+loadDashboard();
+</script>
