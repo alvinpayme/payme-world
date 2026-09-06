@@ -1,5 +1,11 @@
 {
-  "users": [],
+  "users": [
+    {
+      "phone": "0626193693",
+      "password": "$2a$10$wGkz8Zqg6uY8Qe8t6vYpUu8Hq7p7iJp8t8t8t8t8t8t8t8t8",
+      "balance": 0
+    }
+  ],
   "transactions": [],
   "balances": {},
   "settings": {
