@@ -1,54 +1,70 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <title>Payme World - Registreren</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payme World - Account Aanmaken</title>
 </head>
-<body>
-  <h1>Payme World</h1>
-  <h2>Registreren</h2>
+<body style="font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; box-sizing: border-box; padding: 10px;">
 
-  <form id="registerForm">
-    <label>Telefoonnummer:</label><br>
-    <input type="text" id="phone" placeholder="Bijv: 06 12345678" required><br><br>
+    <div style="background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; box-sizing: border-box;">
+        <h2 style="color: #1e3c72; margin-bottom: 8px; font-size: 28px;">Account Aanmaken</h2>
+        <p style="color: #666; margin-bottom: 30px; font-size: 15px;">Word lid van Payme World 🌐</p>
 
-    <label>Wachtwoord:</label><br>
-    <input type="password" id="password" placeholder="Wachtwoord" required><br><br>
+        <form id="registerForm" style="text-align: left;">
+            <div style="margin-bottom: 20px;">
+                <label for="phone" style="display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px;">Telefoonnummer</label>
+                <input type="text" id="phone" required placeholder="Bijv. 0612345678" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9;">
+            </div>
 
-    <button type="submit">Account aanmaken</button>
-  </form>
+            <div style="margin-bottom: 25px;">
+                <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px;">Wachtwoord</label>
+                <input type="password" id="password" required placeholder="••••" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9;">
+            </div>
 
-  <p>Al een account? <a href="login.html">Log hier in</a></p>
+            <button type="submit" style="width: 100%; padding: 14px; background-color: #1e3c72; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                Registreren
+            </button>
+        </form>
 
-  <script>
-    const API_BASE = "https://payme-world.onrender.com";
+        <div style="margin-top: 25px; font-size: 14px; color: #666;">
+            <p>Al een account? <a href="login.html" style="color: #1e3c72; font-weight: bold; text-decoration: none;">Inloggen</a></p>
+        </div>
+    </div>
 
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+<script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const phone = document.getElementById('phone').value;
+        const password = document.getElementById('password').value;
 
-      const phone = document.getElementById("phone").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      try {
-        const res = await fetch(`${API_BASE}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone, password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.error || "Registratie mislukt");
-          return;
+        if (!phone || !password) {
+            alert('Vul alstublieft een telefoonnummer en wachtwoord in.');
+            return;
         }
 
-        alert("Account succesvol aangemaakt. Je kunt nu inloggen.");
-        window.location.href = "login.html";
-      } catch (err) {
-        alert("Er ging iets mis bij het registreren.");
-      }
+        try {
+            const response = await fetch('https://onrender.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Account succesvol aangemaakt! Je kunt nu inloggen.');
+                window.location.href = 'login.html';
+            } else {
+                alert('Fout: ' + (data.error || 'Registratie mislukt.'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Kan geen verbinding maken met de server voor registratie.');
+        }
     });
-  </script>
+</script>
+
 </body>
 </html>
