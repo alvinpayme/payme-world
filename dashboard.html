@@ -1,58 +1,40 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <title>Payme World - Dashboard</title>
-</head>
-<body>
-  <h1>Payme World</h1>
-  <h2>Dashboard</h2>
+<script>
+const token = localStorage.getItem('token');
 
-  <p>Telefoonnummer: <span id="userPhone"></span></p>
-  <p>Saldo: € <span id="userBalance"></span></p>
+if (!token) {
+    window.location.href = "login.html";
+}
 
-  <button id="logoutBtn">Uitloggen</button>
-
-  <script>
-    const API_BASE = "https://payme-world.onrender.com";
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      window.location.href = "login.html";
-    }
-
-    async function loadUser() {
-      try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+async function loadDashboard() {
+    try {
+        const response = await fetch("https://onrender.com", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
         });
 
-        const data = await res.json();
+        const data = await response.json();
 
-        if (!res.ok) {
-          localStorage.removeItem("token");
-          window.location.href = "login.html";
-          return;
+        if (!response.ok) {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+            return;
         }
 
+        document.getElementById("welcomeText").innerText = `Welkom terug!`;
         document.getElementById("userPhone").innerText = data.phone;
         document.getElementById("userBalance").innerText = data.balance;
-      } catch (err) {
-        alert("Er ging iets mis bij het laden van je gegevens.");
-        localStorage.removeItem("token");
-        window.location.href = "login.html";
-      }
+
+    } catch (err) {
+        alert("Kon geen verbinding maken met de live server.");
     }
+}
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-    });
+loadDashboard();
 
-    loadUser();
-  </script>
-</body>
-</html>
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.href = "login.html";
+});
+</script>
